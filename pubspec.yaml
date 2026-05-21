@@ -1,0 +1,24 @@
+name: majilytic
+description: "A Smart Water Mobile App Flutter project."
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0' # Standard stable SDK constraint for modern Flutter
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0           # For REST API calls (Spring Boot)
+  intl: ^0.20.2          # Added for Date/Time formatting and validation structures
+  mqtt_client: ^10.0.0   # For real-time water meter updates via MQTT
+  provider: ^6.1.1       # For state management
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0  # Stable lints configuration matching typical environments
+
+flutter:
+  uses-material-design: true
+  #server.address=0.0.0.0
+  #server.port=8080
