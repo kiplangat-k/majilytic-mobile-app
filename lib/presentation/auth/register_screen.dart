@@ -3,7 +3,10 @@ import 'package:intl/intl.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/utils/validator.dart';
 import 'auth_config.dart';
+import 'login_screen.dart';
 import 'otp_verification.dart';
+// Ensure your Login screen file is imported here if you use pushReplacement
+// import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,10 +24,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _dobController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+
+  // New Controllers
+  final _meterNumberController = TextEditingController();
+  final _roleController = TextEditingController();
+
   final _passwordController = TextEditingController();
 
   DateTime? _selectedDate;
   bool _isLoading = false;
+
+  // List of available roles for the dropdown selection
+  final List<String> _roles = ['TENANT', 'LANDLORD', 'ADMIN'];
+  String? _selectedRole = 'TENANT'; // Sets TENANT as the default starting option
+
+  @override
+  void initState() {
+    super.initState();
+    // Sync the initial dropdown choice with your existing controller text logic
+    _roleController.text = _selectedRole!;
+  }
 
   @override
   void dispose() {
@@ -34,6 +53,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _dobController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _meterNumberController.dispose();
+    _roleController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -54,7 +75,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _submitRegister() async {
-    // Stops execution if any fields fail their validation rules
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -63,13 +83,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final fullName = '${_firstNameController.text.trim()} ${_secondNameController.text.trim()} ${_otherNameController.text.trim()}'.trim();
 
     try {
-      // 🚀 FIXED MANUALLY: Keys now match your Users.java variable names exactly!
+      // Keys matching your backend requirements
       final registrationPayload = {
         'fullName': fullName,
-        'phoneNumber': phone, // Changed from 'phoneNo' to match Java 'phoneNumber'
-        'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(), // Changed from 'emailAddress' to match Java 'email'
+        'phoneNumber': phone,
+        'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+        'account_number': _meterNumberController.text.trim().isEmpty ? null : _meterNumberController.text.trim(),
+        // 🟢 UPDATED: Defaulting to 'TENANT' if empty, keeping it clean of 'CUSTOMER'
+        'role': _roleController.text.trim().isEmpty ? 'TENANT' : _roleController.text.trim().toUpperCase(),
         'password': _passwordController.text.trim(),
-        'role': 'CUSTOMER',
       };
 
       await apiClient.post(
@@ -80,12 +102,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration Successful! User saved to database.'),
+            content: Text('Registration Successful! Redirecting to login...'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+            duration: Duration(seconds: 2),
           ),
         );
+
+        // 🟢 NAVIGATION CONTROL: Options to route to the login screen cleanly
+
+        // Option A: If your login screen opened this screen via Navigator.push(),
+        // popping returns them straight back to that active Login page.
         Navigator.of(context).pop();
+
+        // Option B: If you want to explicitly kill this screen and route directly to your LoginScreen class:
+        // Navigator.of(context).pushReplacement(
+        //   MaterialPageRoute(builder: (context) => const LoginScreen()),
+        // );
       }
     } catch (failure) {
       print("--- MAJILYTIC UTILITIES LOG TRACE ---");
@@ -209,6 +241,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       validator: Validator.validateEmail,
                     ),
                     const SizedBox(height: 20),
+
+                    // Smart Meter Number Text Field
+                    TextFormField(
+                      controller: _meterNumberController,
+                      decoration: _buildInputDecoration('Account_number'),
+                      keyboardType: TextInputType.text,
+                      validator: (value) => value == null || value.trim().isEmpty ? 'Please enter your Smart Meter Number' : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Dropdown Form Field for Role Choice
+                    DropdownButtonFormField<String>(
+                      value: _selectedRole,
+                      decoration: _buildInputDecoration('Role'),
+                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0D47A1)),
+                      items: _roles.map((String role) {
+                        return DropdownMenuItem<String>(
+                          value: role,
+                          child: Text(role, style: const TextStyle(color: Colors.black87)),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedRole = newValue;
+                          _roleController.text = newValue ?? '';
+                        });
+                      },
+                      validator: (value) => value == null || value.isEmpty ? 'Please select a role' : null,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Password Text Field
                     TextFormField(
                       controller: _passwordController,
                       decoration: _buildInputDecoration('Password'),
@@ -231,7 +295,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 20),
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        // 🟢 Clears the registration screen and slides the Login page into place
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
+                      },
                       child: const Text('Already have an account..? Login', style: TextStyle(color: Color(0xFF0D47A1))),
                     ),
                     const SizedBox(height: 24),
