@@ -1,17 +1,54 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:majilytic/presentation/auth/login_screen.dart';
-import 'package:majilytic/presentation/auth/register_screen.dart';
-import 'package:majilytic/presentation/billing/billing_screen.dart';
-import 'package:majilytic/presentation/profile/profile_screen.dart';
+import 'package:provider/provider.dart';
 
-// 🌟 IMPORTANT: Make sure this import matches the actual file location of your new dynamic dashboard!
-import 'package:majilytic/presentation/dashboard/dashboard_screen.dart';
+// --- FEATURE ROUTED USER INTERFACE SCREENS ---
+import 'features/screens/login_screen.dart';
+import 'features/screens/profile_screen.dart';
+import 'features/screens/register_screen.dart';
+import 'features/screens/splash_screen.dart';
+import 'features/screens/otp_verification_screen.dart';
+import 'features/screens/forgot_password_screen.dart';
+import 'features/screens/reset_password_screen.dart';
 
-void main() {
-  // Ensure Flutter bindings are initialized before any async SDK or backend setup
+// --- SERVICE LOCATOR DEPENDENCY ENGINE ---
+import 'core/config/dependency_injection.dart';
+
+// --- CORE FRAMEWORK STACK IMPORTS ---
+import 'core/theme/light_theme.dart';
+import 'core/theme/dark_theme.dart';
+
+// --- APP STATE ENGINE MANAGEMENT PROVIDERS ---
+import 'features/providers/auth_provider.dart';
+import 'features/providers/session_provider.dart';
+import 'features/prepaid/wallet/wallet_provider.dart';
+import 'features/postpaid/billing/billing_provider.dart';
+import 'features/postpaid/telemetry/telemetry_provider.dart';
+import 'features/prepaid/valve/valve_provider.dart';
+
+// --- FEATURE ROUTED USER INTERFACE COMPONENTS ---
+import 'features/postpaid/billing/billing_screen.dart';
+import 'features/postpaid/telemetry/telemetry_screen.dart';
+import 'features/prepaid/valve/valve_screen.dart';
+import 'features/prepaid/wallet/wallet_screen.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await DependencyInjection.initializeDependencies();
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => locator<AuthProvider>()),
+        ChangeNotifierProvider(create: (_) => locator<SessionProvider>()..readCachedUserSession()),
+        ChangeNotifierProvider(create: (_) => locator<WalletProvider>()),
+        ChangeNotifierProvider(create: (_) => locator<BillingProvider>()),
+        ChangeNotifierProvider(create: (_) => locator<TelemetryProvider>()),
+        ChangeNotifierProvider(create: (_) => locator<ValveProvider>()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,34 +57,31 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Majilytic Utilities',
+      title: 'Majilytic Smart Utilities',
       debugShowCheckedModeBanner: false,
 
-      // Light & Dark theme layers linked to your seed configurations
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0066CC), // Primary Brand Color matching your login UI
-          brightness: Brightness.light,
-        ),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0066CC),
-          brightness: Brightness.dark,
-        ),
-      ),
+      theme: LightTheme.data,
+      darkTheme: DarkTheme.data,
       themeMode: ThemeMode.system,
 
-      // App launches directly into Sign In view
+      // --- GLOBAL ROUTING ENGINE ---
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/dashboard': (context) => const DashboardScreen(), // 🌟 Routes to your stateful smart water component
-        '/wallet': (context) => const WalletScreen(),       // Routes to separate screen file as needed
+
+        // 🟢 ADDED: Dynamic target dashboard strings registered exactly for authority routing
+        '/tenant_dashboard': (context) => const TenantDashboardScreen(),
+        '/landlord_dashboard': (context) => const LandlordDashboardScreen(),
+        '/admin_dashboard': (context) => const AdminDashboardScreen(),
+
+        // Fallback target points straight to your primary grid view dashboard layout
+        '/dashboard': (context) => const DashboardScreen(),
+
+        '/wallet': (context) => const WalletScreen(),
         '/billing': (context) => const BillingScreen(),
+        '/telemetry': (context) => const TelemetryScreen(),
+        '/valve': (context) => const ValveScreen(),
         '/profile': (context) => const ProfileScreen(),
       },
     );
@@ -55,41 +89,96 @@ class MyApp extends StatelessWidget {
 }
 
 /// =========================================================================
-/// WALLET PLACEHOLDER
-/// (Move this to lib/presentation/wallet/wallet_screen.dart whenever you want)
+/// 🛡️ COMPILATION BOUNDARY SAFEGUARDS: BUILT-IN APPLICATION VIEW SCREENS
 /// =========================================================================
-class WalletScreen extends StatelessWidget {
-  const WalletScreen({super.key});
+
+// 🟢 NEW: Explicit dashboard components mapped cleanly to prevent compilation errors
+class TenantDashboardScreen extends StatelessWidget {
+  const TenantDashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const DashboardScreen(); // Renders the default operational panel for tenants
+  }
+}
+
+class LandlordDashboardScreen extends StatelessWidget {
+  const LandlordDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Wallet')),
-      body: Center(
+      appBar: AppBar(title: const Text('Landlord Dashboard')),
+      body: const Center(
+        child: Text('Property Management & Utility Tracking Overview'),
+      ),
+    );
+  }
+}
+
+class AdminDashboardScreen extends StatelessWidget {
+  const AdminDashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Admin System Portal')),
+      body: const Center(
+        child: Text('Global System Configuration & Smart Telemetry Analytics'),
+      ),
+    );
+  }
+}
+
+class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Majilytic Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => Navigator.pushNamed(context, '/profile'),
+          )
+        ],
+      ),
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(16),
+        children: [
+          _card(context, 'Wallet Engine', Icons.account_balance_wallet, '/wallet'),
+          _card(context, 'Billing Ledger', Icons.receipt_long, '/billing'),
+          _card(context, 'Valve Operations', Icons.tune, '/valve'),
+          _card(context, 'Telemetry Logs', Icons.analytics, '/telemetry'),
+        ],
+      ),
+    );
+  }
+
+  Widget _card(BuildContext context, String title, IconData icon, String route) {
+    return Card(
+      child: InkWell(
+        onTap: () => Navigator.pushNamed(context, route),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Available Balance',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-            const Text(
-              'KES 0.00',
-              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Triggering payment API...')),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Deposit Funds'),
-            ),
-          ],
+          children: [Icon(icon, size: 40), Text(title)],
         ),
       ),
     );
   }
+}
+
+class PrepaidScreen extends StatelessWidget {
+  const PrepaidScreen({super.key});
+  @override
+  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Prepaid')));
+}
+
+class PostpaidScreen extends StatelessWidget {
+  const PostpaidScreen({super.key});
+  @override
+  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Postpaid')));
 }

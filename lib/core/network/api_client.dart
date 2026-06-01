@@ -1,82 +1,159 @@
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:io';
-import '../errors/failures.dart';
-import '../constants/api_constants.dart';
+// lib/core/network/api_client.dart
+
+import 'package:dio/dio.dart';
+import 'network_exceptions.dart'; // 🟢 FIXED: Correct relative import since both files share this directory
 
 class ApiClient {
-  final http.Client _client;
-  ApiClient(this._client);
+  final Dio _dio;
 
-  // UPDATED: Automatically filters headers so public authentication routes don't bundle tokens
-  Map<String, String> _getHeaders(String endpoint, String? token) {
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
+  ApiClient(this._dio);
 
-    // Only inject the Bearer authorization if a token exists AND we aren't hitting an auth route
-    if (token != null && !endpoint.contains('/auth/')) {
-      headers['Authorization'] = 'Bearer $token';
-    }
+  /// Provides access to the underlying raw Dio instance
+  Dio get instance => _dio;
 
-    return headers;
-  }
-
-  // FIXED: Removed the triple-slash typo 'http:///' to correctly evaluate path boundaries
-  Uri _buildUri(String endpoint) {
-    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
-      return Uri.parse(endpoint);
-    }
-    return Uri.parse('${ApiConstants.baseUrl}$endpoint');
-  }
-
-  // HTTP POST Request Wrapper
-  Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> body, {String? token}) async {
-    final url = _buildUri(endpoint);
+  /// Executes an HTTP GET request operation
+  Future<Response<T>> get<T>(
+      String path, {
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+        CancelToken? cancelToken,
+        ProgressCallback? onReceiveProgress,
+      }) async {
     try {
-      final response = await _client.post(
-        url,
-        headers: _getHeaders(endpoint, token), // Passed endpoint here to evaluate path safety
-        body: jsonEncode(body),
-      ).timeout(const Duration(milliseconds: ApiConstants.connectionTimeout));
-
-      return _handleResponse(response);
-    } on SocketException {
-      throw const NetworkFailure();
+      final response = await _dio.get<T>(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return response;
+    } on DioException catch (e) {
+      throw NetworkExceptions.handleDioError(e);
     }
   }
 
-  // HTTP GET Request Wrapper
-  Future<Map<String, dynamic>> get(String endpoint, {String? token}) async {
-    final url = _buildUri(endpoint);
+  /// Executes an HTTP POST request operation
+  Future<Response<T>> post<T>(
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+        CancelToken? cancelToken,
+        ProgressCallback? onSendProgress,
+        ProgressCallback? onReceiveProgress,
+      }) async {
     try {
-      final response = await _client.get(
-        url,
-        headers: _getHeaders(endpoint, token), // Passed endpoint here to evaluate path safety
-      ).timeout(const Duration(milliseconds: ApiConstants.connectionTimeout));
-
-      return _handleResponse(response);
-    } on SocketException {
-      throw const NetworkFailure();
+      final response = await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return response;
+    } on DioException catch (e) {
+      throw NetworkExceptions.handleDioError(e);
     }
   }
 
-  // Parses Spring Boot HTTP status payloads safely
-  Map<String, dynamic> _handleResponse(http.Response response) {
-    final int statusCode = response.statusCode;
-    final Map<String, dynamic> decodedBody = response.body.isNotEmpty
-        ? jsonDecode(response.body)
-        : <String, dynamic>{};
+  /// Executes an HTTP PUT request operation
+  Future<Response<T>> put<T>(
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+        CancelToken? cancelToken,
+        ProgressCallback? onSendProgress,
+        ProgressCallback? onReceiveProgress,
+      }) async {
+    try {
+      final response = await _dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return response;
+    } on DioException catch (e) {
+      throw NetworkExceptions.handleDioError(e);
+    }
+  }
 
-    if (statusCode >= 200 && statusCode < 300) {
-      return decodedBody;
-    } else if (statusCode == 401 || statusCode == 403) {
-      throw AuthFailure(decodedBody['message'] ?? 'Session expired. Please try again.');
-    } else if (statusCode >= 400 && statusCode < 500) {
-      throw ServerFailure(decodedBody['message'] ?? 'Invalid request processing parameters.');
-    } else {
-      throw const ServerFailure('Internal system server failure. Try again later.');
+  /// Executes an HTTP PATCH request operation
+  Future<Response<T>> patch<T>(
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+        CancelToken? cancelToken,
+        ProgressCallback? onSendProgress,
+        ProgressCallback? onReceiveProgress,
+      }) async {
+    try {
+      final response = await _dio.patch<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
+      );
+      return response;
+    } on DioException catch (e) {
+      throw NetworkExceptions.handleDioError(e);
+    }
+  }
+
+  /// Executes an HTTP DELETE request operation
+  Future<Response<T>> delete<T>(
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        Options? options,
+        CancelToken? cancelToken,
+      }) async {
+    try {
+      final response = await _dio.delete<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+      );
+      return response;
+    } on DioException catch (e) {
+      throw NetworkExceptions.handleDioError(e);
+    }
+  }
+
+  /// Downloads binary files (e.g., statements, billing receipts) from the server
+  Future<Response> download(
+      String urlPath,
+      dynamic savePath, {
+        ProgressCallback? onReceiveProgress,
+        Map<String, dynamic>? queryParameters,
+        CancelToken? cancelToken,
+        Options? options,
+      }) async {
+    try {
+      final response = await _dio.download(
+        urlPath,
+        savePath,
+        onReceiveProgress: onReceiveProgress,
+        queryParameters: queryParameters,
+        cancelToken: cancelToken,
+        options: options,
+      );
+      return response;
+    } on DioException catch (e) {
+      throw NetworkExceptions.handleDioError(e);
     }
   }
 }

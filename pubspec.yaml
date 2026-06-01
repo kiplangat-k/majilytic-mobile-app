@@ -6,12 +6,17 @@ environment:
   sdk: '>=3.2.0 <4.0.0' # Standard stable SDK constraint for modern Flutter
 
 dependencies:
+  dio: ^5.9.2
   flutter:
     sdk: flutter
+  flutter_secure_storage: ^10.3.0
+  get_it: ^9.2.1
   http: ^1.2.0           # For REST API calls (Spring Boot)
   intl: ^0.20.2          # Added for Date/Time formatting and validation structures
+  local_auth: ^3.0.1
   mqtt_client: ^10.0.0   # For real-time water meter updates via MQTT
   provider: ^6.1.1       # For state management
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

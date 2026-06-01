@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../dashboard/dashboard_screen.dart';
-import '../wallet/wallet_screen.dart';
-import '../billing/billing_screen.dart';
-import '../profile/profile_screen.dart';
+import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/prepaid/wallet/wallet_screen.dart';
+import '../../features/postpaid/billing/billing_screen.dart';
+import '../../features/screens/profile_screen.dart';
 
 // Placeholder stubs for the remaining modular units in your flowchart
 class PrepaidModuleStub extends StatelessWidget { const PrepaidModuleStub({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Prepaid Module (Meter Validation)'))); }
