@@ -92,7 +92,9 @@ class DependencyInjection {
     locator.registerFactory<SessionProvider>(() => SessionProvider(locator<TokenStorageService>()));
 
     // Feature Providers
-    locator.registerFactory<DashboardProvider>(() => DashboardProvider(locator<DashboardService>()));
+    // Inside DependencyInjection class configuration:
+     //locator.registerLazySingleton<TokenStorageService>(() => TokenStorageService(locator<TokenStorageService>()));
+    //locator.registerFactory<DashboardProvider>(() => DashboardProvider(locator<DashboardService>()));
     locator.registerFactory<BillingProvider>(() => BillingProvider(locator<BillingService>()));
     locator.registerFactory<TelemetryProvider>(() => TelemetryProvider(locator<TelemetryService>()));
     locator.registerFactory<WalletProvider>(() => WalletProvider(locator<WalletService>()));

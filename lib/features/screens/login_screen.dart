@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock, color: Color(0xFF2B77ED)),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.blue),
+                        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       border: const OutlineInputBorder(),
