@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // FIX: Safely read the role string and enforce upper-case matching
         final userRole = authProvider.userRole?.toUpperCase() ?? 'TENANT';
 
-        // NAVIGATE: Routes accurately based on database authority level
+        // NAVIGATE: Routes accurately based on database authority level or generalized dashboard
         if (userRole == 'ADMIN') {
           Navigator.pushReplacementNamed(context, '/admin_dashboard');
         } else if (userRole == 'LANDLORD') {
@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
         } else if (userRole == 'TENANT') {
           Navigator.pushReplacementNamed(context, '/tenant_dashboard');
         } else {
-          // General fallback route if your router uses a unified dashboard path
+          // THE FIX: Routes directly to your primary unified dashboard screen path
           Navigator.pushReplacementNamed(context, '/dashboard');
         }
 
@@ -105,6 +105,25 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA), // Subtle light background contrast
+
+      // --- 🔷 TOP BLUE APPLICATION HEADER BAR ---
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF2B77ED), // Deep navy primary brand blue
+        elevation: 2,
+        centerTitle: true,
+        automaticallyImplyLeading: false, // Ensures no back buttons automatically render here
+        title: const Text(
+          'Login',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 20,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -115,12 +134,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.water_drop, size: 80, color: Colors.blue),
+                  const Icon(Icons.water_drop, size: 80, color: Color(0xFF2B77ED)),
                   const SizedBox(height: 16),
                   const Text(
                     'Majilytic App',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                   const Text(
                     'Sign in to manage your smart water utilities',
@@ -135,8 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
                       labelText: 'Phone Number',
-                      prefixIcon: Icon(Icons.phone),
+                      prefixIcon: Icon(Icons.phone, color: Color(0xFF2B77ED)),
                       border: OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF2B77ED), width: 2.0),
+                      ),
                     ),
                     validator: (val) => val == null || val.isEmpty ? 'Please enter your phone number' : null,
                   ),
@@ -148,12 +170,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock),
+                      prefixIcon: const Icon(Icons.lock, color: Color(0xFF2B77ED)),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.blue),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       border: const OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF2B77ED), width: 2.0),
+                      ),
                     ),
                     validator: (val) => val == null || val.length < 4 ? 'Password must be valid' : null,
                   ),
@@ -163,8 +188,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.blue,
+                      backgroundColor: const Color(0xFF2B77ED),
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     onPressed: _isLoading ? null : _handleLogin,
                     child: _isLoading
@@ -173,21 +201,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                        : const Text('Login', style: TextStyle(fontSize: 16)),
+                        : const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 16),
 
                   // Registration Link
                   TextButton(
                     onPressed: () => Navigator.pushNamed(context, '/register'),
+                    style: TextButton.styleFrom(foregroundColor: const Color(0xFF2B77ED)),
                     child: const Text("Don't have an account? Register here"),
                   ),
 
-                  // 🟢 MOVED: Forgot Password link positioned below the register link
+                  // Forgot Password link positioned below the register link
                   Align(
                     alignment: Alignment.center,
                     child: TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                      style: TextButton.styleFrom(foregroundColor: const Color(
+                          0xFF2B77ED)),
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(fontWeight: FontWeight.w600),
@@ -195,7 +226,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
                 ],
               ),
             ),

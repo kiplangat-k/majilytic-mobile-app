@@ -21,7 +21,7 @@ class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
 
   // The 6 main pillars exactly as structured in the chart layout
   final List<Widget> _modules = [
-    const DashboardScreen(),       // Index 0: Dashboard Module
+    //const DashboardScreen(),       // Index 0: Dashboard Module
     const PrepaidModuleStub(),     // Index 1: Prepaid Module
     const PostpaidModuleStub(),    // Index 2: Postpaid Module
     const SmartMeterModuleStub(),  // Index 3: Smart Meter Module

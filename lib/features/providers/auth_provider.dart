@@ -25,7 +25,9 @@ class AuthProvider extends ChangeNotifier {
 
   // Convenience getters for user details in UI widgets
   String? get accountNo => _currentUser?.accountNo;
-  String get userRole => _currentUser?.role ?? 'TENANT';
+
+  // 🟢 SAFETIED GETTER: Always returns UPPERCASE ('TENANT', 'ADMIN', 'LANDLORD') to match navigation logic
+  String get userRole => (_currentUser?.role ?? 'TENANT').toUpperCase();
 
   /// Handles complete authentication orchestration pipeline using credentials
   Future<bool> loginUser({
@@ -130,10 +132,9 @@ class AuthResponse {
 }
 
 /// Fallback extension ensuring contract requirements are satisfied at compile time.
-/// 🟢 CORRECTED: Updated the authenticate contract parameters to match phone-based credentials.
 extension AuthApiServiceExtension on AuthApiService {
   Future<AuthResponse> authenticate({
-    required String phoneNumber, // 🔥 Changed from email to phoneNumber
+    required String phoneNumber,
     required String password,
   }) async {
     throw UnimplementedError("Please implement authenticate() inside auth_api_service.dart");

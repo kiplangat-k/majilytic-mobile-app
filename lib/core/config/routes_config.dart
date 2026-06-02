@@ -1,12 +1,21 @@
 // lib/core/config/routes_config.dart
 
 import 'package:flutter/material.dart';
-import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/screens/login_screen.dart';
+
+// 🟢 FIXED: Import the specific, modular dashboard role screens
+import '../../features/dashboard/tenant_dashboard_screen.dart';
+import '../../features/dashboard/landlord_dashboard_screen.dart';
+import '../../features/dashboard/admin_dashboard_screen.dart';
 
 class RoutesConfig {
   static const String login = '/';
-  static const String dashboard = '/dashboard';
+
+  // 🟢 FIXED: Defined distinct role routing strings matching your login logic
+  static const String tenantDashboard = '/tenant_dashboard';
+  static const String landlordDashboard = '/landlord_dashboard';
+  static const String adminDashboard = '/admin_dashboard';
+
   static const String wallet = '/wallet';
   static const String billing = '/billing';
   static const String telemetry = '/telemetry';
@@ -19,11 +28,24 @@ class RoutesConfig {
           builder: (_) => const LoginScreen(),
           settings: settings,
         );
-      case dashboard:
+
+    // 🟢 FIXED: Explicitly maps the specific destination views correctly
+      case tenantDashboard:
         return MaterialPageRoute(
-          builder: (_) => const DashboardScreen(),
+          builder: (_) => const TenantDashboardScreen(),
           settings: settings,
         );
+      case landlordDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const LandlordDashboardScreen(),
+          settings: settings,
+        );
+      case adminDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const AdminDashboardScreen(),
+          settings: settings,
+        );
+
       case wallet:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(body: Center(child: Text('Wallet Feature Module'))),
