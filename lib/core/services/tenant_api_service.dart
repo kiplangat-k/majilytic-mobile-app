@@ -1,33 +1,49 @@
-// lib/features/services/tenant_api_service.dart
+// lib/core/services/tenant_api_service.dart
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// 🟢 FIXED: Using one uniform, absolute package path definition to clear the namespace clash
-import 'package:majilytic/features/services/token_storage_service.dart';
-
 class TenantApiService {
-  final TokenStorageService _tokenStorage;
-  // Change this to match your Spring Boot server port/address (e.g., your local machine IP or localhost)
-  final String baseUrl = "http://localhost:8080/api/v1/tenant";
+  final String baseUrl;
 
-  TenantApiService(this._tokenStorage);
+  // FIXED: Remove 'final String? token' from constructor parameters
+  // Instead, allow a callback or dynamic assignment so GetIt can register it as a permanent singleton.
+  String? Function()? _tokenProvider;
 
-  /// Fetches real-time meter readings, billing balances, and wallet information
+  TenantApiService({
+    required this.baseUrl,
+    String? Function()? tokenProvider,
+  }) : _tokenProvider = tokenProvider;
+
+  // A helper method to update the token provider after authentication if needed
+  void updateTokenProvider(String? Function() provider) {
+    _tokenProvider = provider;
+  }
+
+  // FIXED: Evaluates the token from the provider function every single time an API call runs
+  Map<String, String> get _headers {
+    final activeToken = _tokenProvider?.call();
+    return {
+      'Content-Type': 'application/json',
+      if (activeToken != null) 'Authorization': 'Bearer $activeToken',
+    };
+  }
+
+  /// Fetches raw metric configurations mapping directly to your Spring Boot DTO
   Future<Map<String, dynamic>> getTenantMetrics() async {
-    final token = await _tokenStorage.getAccessToken();
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/tenant/metrics'),
+        headers: _headers,
+      );
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/metrics'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token', // 🔑 Attaching the JWT token resolves your 401 Security Fault
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to synchronize tenant data: Server Fault [${response.statusCode}]');
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Server responded with status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Network stack pipeline failure: $e');
     }
   }
 }

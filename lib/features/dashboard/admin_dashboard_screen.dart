@@ -17,14 +17,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     super.initState();
     // Fetch live system statistics immediately upon layout initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminProvider>().fetchAdminSystemState();
+      // FIXED: Changed fetchAdminSystemState() to getAdminMetrics()
+      context.read<AdminProvider>().getAdminMetrics();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AdminProvider>();
-    final data = provider.adminData;
+    // FIXED: Changed provider.adminData to provider.dashboardData
+    final data = provider.dashboardData;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -41,10 +43,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF0D47A1)))
-          : provider.errorMessage.isNotEmpty
-          ? _buildErrorScreen(provider.errorMessage)
+      // FIXED: Safely handling nullable errorMessage
+          : (provider.errorMessage != null && provider.errorMessage!.isNotEmpty)
+          ? _buildErrorScreen(provider.errorMessage!)
           : RefreshIndicator(
-        onRefresh: () => context.read<AdminProvider>().fetchAdminSystemState(),
+        // FIXED: Changed fetchAdminSystemState() to getAdminMetrics()
+        onRefresh: () => context.read<AdminProvider>().getAdminMetrics(),
         color: const Color(0xFF0D47A1),
         child: ListView(
           padding: const EdgeInsets.all(16.0),
@@ -112,7 +116,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withOpacity(0.1),
+          // FIXED: Updated deprecated withOpacity to withValues
+          backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
@@ -135,7 +140,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Text(message, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => context.read<AdminProvider>().fetchAdminSystemState(),
+              // FIXED: Changed fetchAdminSystemState() to getAdminMetrics()
+              onPressed: () => context.read<AdminProvider>().getAdminMetrics(),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D47A1)),
               child: const Text('Retry Connection', style: TextStyle(color: Colors.white)),
             ),

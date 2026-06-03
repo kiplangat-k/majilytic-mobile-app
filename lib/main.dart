@@ -39,14 +39,18 @@ import 'features/prepaid/valve/valve_screen.dart';
 import 'features/prepaid/wallet/wallet_screen.dart';
 
 void main() async {
+  // Ensures engine bindings are locked in before running async initializations
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Bootstraps GetIt engine container (This is your setupLocator configuration!)
   await DependencyInjection.initializeDependencies();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => locator<AuthProvider>()),
-        ChangeNotifierProvider(create: (_) => locator<SessionProvider>()..readCachedUserSession()),
+        // FIXED: Instantiating cleanly. Let SessionProvider manage its lifecycle methods safely.
+        ChangeNotifierProvider(create: (_) => locator<SessionProvider>()),
         ChangeNotifierProvider(create: (_) => locator<DashboardProvider>()),
         ChangeNotifierProvider(create: (_) => locator<WalletProvider>()),
         ChangeNotifierProvider(create: (_) => locator<BillingProvider>()),

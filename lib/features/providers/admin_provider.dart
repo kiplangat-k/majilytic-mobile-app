@@ -1,35 +1,47 @@
-// lib/features/providers/admin_provider.dart
 import 'package:flutter/material.dart';
 import '../../core/services/admin_api_service.dart';
-// import '../services/admin_api_service.dart';
-import '../../../core/errors/errors_handler.dart';
 
-class AdminProvider extends ChangeNotifier {
-  final AdminApiService _adminService;
+class AdminProvider with ChangeNotifier {
+  final AdminApiService _apiService;
 
-  AdminProvider(this._adminService);
-
+  Map<String, dynamic>? _dashboardData;
   bool _isLoading = false;
-  String _errorMessage = '';
-  Map<String, dynamic>? _adminData;
+  String? _errorMessage;
 
+  AdminProvider(this._apiService);
+
+  Map<String, dynamic>? get dashboardData => _dashboardData;
   bool get isLoading => _isLoading;
-  String get errorMessage => _errorMessage;
-  Map<String, dynamic>? get adminData => _adminData;
+  String? get errorMessage => _errorMessage;
 
-  Future<void> fetchAdminSystemState() async {
-    _isLoading = true;
-    _errorMessage = '';
-    notifyListeners();
-
+  Future<void> getAdminMetrics() async {
+    _setLoading(true);
     try {
-      final data = await _adminService.fetchAdminMetrics();
-      _adminData = data;
-    } catch (error) {
-      _errorMessage = ErrorsHandler.extractUserFriendlyMessage(error);
+      _dashboardData = await _apiService.fetchSystemOverview();
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = e.toString();
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
+  }
+
+  Future<bool> moderateUser(String userId, bool action) async {
+    _setLoading(true);
+    try {
+      await _apiService.updateUserStatus(userId, action);
+      _errorMessage = null;
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void _setLoading(bool val) {
+    _isLoading = val;
+    notifyListeners();
   }
 }
